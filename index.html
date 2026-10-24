@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Движение — Мягкая математика</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap');
+:root{--primary:#6c5ce7;--secondary:#fd79a8;--success:#00b894;--warning:#fdcb6e;--info:#0984e3;--dark:#2d3436;--light:#f7f5ff;--vk:#0077FF;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0edff 0%,#fef9f3 50%,#e8f8f0 100%);color:var(--dark);min-height:100vh;padding:20px;position:relative;overflow-x:hidden;}
+body::before{content:"МЯГКАЯ МАТЕМАТИКА · ДВИЖЕНИЕ · СКОРОСТЬ";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);font-size:55px;font-weight:900;color:rgba(108,92,231,0.04);white-space:nowrap;pointer-events:none;z-index:0;letter-spacing:5px;}
+.container{max-width:1000px;margin:0 auto;position:relative;z-index:1;}
+h1{text-align:center;font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;line-height:1.2;}
+.subtitle{text-align:center;color:#636e72;margin-bottom:22px;font-weight:600;}
+.sound-toggle{position:fixed;top:20px;left:20px;width:44px;height:44px;border-radius:50%;border:2px solid var(--primary);background:#fff;cursor:pointer;font-size:18px;z-index:150;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.sound-toggle:hover{transform:scale(1.1);}
+.sound-toggle.muted{background:#e2e8f0;border-color:#94a3b8;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;}
+.tab{padding:12px 22px;border:2px solid transparent;border-radius:12px;background:rgba(255,255,255,0.7);font-family:inherit;font-weight:800;font-size:0.95rem;color:#636e72;cursor:pointer;transition:all .25s;}
+.tab.active{background:#fff;color:var(--primary);border-color:var(--primary);box-shadow:0 8px 20px rgba(108,92,231,0.2);}
+.screen{display:none;animation:fadeIn .4s ease;}
+.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes particleBurst{0%{transform:translate(0,0) scale(0.4);opacity:1;}100%{transform:translate(var(--dx),var(--dy)) scale(1.3);opacity:0;}}
+@keyframes screenShake{0%,100%{transform:translate(0,0);}15%{transform:translate(-6px,3px);}30%{transform:translate(6px,-3px);}45%{transform:translate(-4px,-4px);}60%{transform:translate(4px,4px);}80%{transform:translate(-2px,2px);}}
+.shake{animation:screenShake .5s ease;}
+
+/* ЭКРАН ВЫБОРА УРОВНЯ */
+.level-select{max-width:700px;margin:0 auto;text-align:center;}
+.level-select h2{font-size:1.6rem;color:var(--primary);margin-bottom:8px;font-weight:900;}
+.level-select p{color:#636e72;margin-bottom:24px;font-size:.95rem;}
+.level-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.level-card{background:#fff;border:2px solid #f0edff;border-radius:20px;padding:28px 20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.level-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(108,92,231,0.18);border-color:var(--primary);}
+.level-card.l2{border-color:#fde7f3;}
+.level-card.l2:hover{border-color:var(--secondary);box-shadow:0 20px 40px rgba(253,121,168,0.2);}
+.level-card .level-icon{font-size:3rem;margin-bottom:12px;}
+.level-card h3{font-size:1.3rem;font-weight:900;color:var(--primary);margin-bottom:6px;}
+.level-card.l2 h3{color:var(--secondary);}
+.level-card .level-desc{font-size:.85rem;color:#636e72;margin-bottom:10px;line-height:1.4;}
+.level-card .level-meta{display:inline-block;background:var(--light);color:var(--primary);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:800;margin:2px;}
+.level-card.l2 .level-meta{background:#fff5f9;color:var(--secondary);}
+.level-card .level-record{margin-top:12px;font-size:.75rem;color:#b8860b;font-weight:800;min-height:18px;}
+.level-card .level-record.empty{color:#94a3b8;font-weight:600;}
+
+/* ТЕОРИЯ */
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.type-card{background:#fff;border:2px solid #f0edff;border-radius:16px;padding:16px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden;}
+.type-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(108,92,231,0.12);border-color:var(--primary);}
+.type-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.05rem;color:var(--primary);margin-bottom:10px;}
+.type-title .emoji{font-size:1.4rem;flex-shrink:0;}
+.diagram{width:100%;height:110px;margin:8px 0;background:#fafafa;border-radius:10px;display:block;}
+.formula{background:linear-gradient(135deg,var(--light),#fff);padding:10px;border-radius:8px;border-left:4px solid var(--primary);font-weight:700;font-size:.88rem;color:var(--primary);margin-top:6px;line-height:1.3;word-break:break-word;}
+.type-desc{font-size:.85rem;color:#636e72;margin-top:6px;line-height:1.4;}
+.click-hint{font-size:.75rem;color:var(--secondary);font-weight:800;margin-top:8px;text-align:center;}
+
+/* МОДАЛКА */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:200;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:20px;padding:24px;max-width:760px;width:100%;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.4);animation:modalIn .3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;font-size:20px;font-weight:800;color:#475569;transition:all .2s;}
+.modal-close:hover{background:#e2e8f0;color:var(--dark);transform:rotate(90deg);}
+.modal-title{font-size:1.3rem;font-weight:900;color:var(--primary);margin-bottom:14px;padding-right:40px;}
+.modal-svg{width:100%;background:#fafafa;border-radius:12px;margin-bottom:14px;overflow:hidden;}
+.modal-svg svg{display:block;width:100%;height:auto;}
+.play-btn{width:100%;padding:10px 16px;border:2px solid var(--primary);background:#fff;color:var(--primary);border-radius:10px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;margin-bottom:12px;transition:all .2s;}
+.play-btn:hover{background:var(--primary);color:#fff;}
+.play-btn.playing{background:var(--secondary);border-color:var(--secondary);color:#fff;}
+.modal-slider{margin-bottom:12px;}
+.modal-slider label{font-size:.9rem;font-weight:800;color:#475569;display:block;margin-bottom:6px;}
+.modal-slider input[type="range"]{width:100%;height:10px;border-radius:5px;background:#e2e8f0;outline:none;-webkit-appearance:none;cursor:pointer;display:block;}
+.modal-slider input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));cursor:pointer;box-shadow:0 2px 10px rgba(108,92,231,0.5);}
+.modal-slider input[type="range"]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));cursor:pointer;border:none;}
+.modal-info{background:var(--light);padding:10px 14px;border-radius:10px;font-size:.9rem;font-weight:700;color:var(--primary);margin-bottom:12px;border-left:4px solid var(--primary);}
+.modal-bars{margin-bottom:14px;}
+.bar-item{margin-bottom:10px;}
+.bar-track{position:relative;height:24px;background:#f1f5f9;border-radius:6px;overflow:visible;}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .15s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:.7rem;font-weight:800;overflow:hidden;white-space:nowrap;}
+.bar-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ef4444;}
+.bar-marker::after{content:attr(data-label);position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:.7rem;font-weight:800;color:#ef4444;white-space:nowrap;}
+.modal-formula{background:linear-gradient(135deg,var(--light),#fff5f9);padding:12px 14px;border-radius:10px;margin-bottom:10px;font-weight:800;color:var(--primary);font-size:.95rem;border:2px dashed #a29bfe;line-height:1.3;}
+.modal-desc{font-size:.9rem;color:#636e72;line-height:1.5;}
+
+/* ИГРА */
+.game-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.game-info{flex:1;min-width:200px;background:#fff;padding:12px 16px;border-radius:12px;border-left:4px solid var(--info);font-size:.9rem;}
+.game-level-badge{display:inline-block;background:var(--primary);color:#fff;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:800;margin-bottom:4px;}
+.game-level-badge.l2{background:var(--secondary);}
+.back-btn{background:#fff;border:2px solid #e2e8f0;color:#475569;padding:8px 14px;border-radius:10px;font-family:inherit;font-weight:800;font-size:.85rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;}
+.back-btn:hover{background:var(--light);border-color:var(--primary);color:var(--primary);}
+.timer-wrap{background:linear-gradient(135deg,#fff,#f0fdf4);padding:10px 18px;border-radius:14px;border:2px solid var(--success);display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,184,148,0.15);transition:all .3s;flex-shrink:0;}
+.timer-wrap.warning{border-color:#f39c12;background:linear-gradient(135deg,#fff,#fffbea);box-shadow:0 6px 20px rgba(243,156,18,0.25);}
+.timer-wrap.danger{border-color:#e74c3c;background:linear-gradient(135deg,#fff,#fdeaea);box-shadow:0 6px 20px rgba(231,76,60,0.35);animation:timerPulse 1.5s infinite;}
+@keyframes timerPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
+.timer-icon{font-size:1.5rem;}
+.timer-value{font-size:1.5rem;font-weight:900;color:var(--success);font-variant-numeric:tabular-nums;min-width:80px;text-align:center;}
+.timer-wrap.warning .timer-value{color:#f39c12;}
+.timer-wrap.danger .timer-value{color:#e74c3c;}
+.timer-label{font-size:.7rem;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:.5px;}
+.timer-recommended{font-size:.65rem;color:#94a3b8;font-weight:700;margin-top:2px;}
+
+.pool{background:rgba(255,255,255,0.7);padding:12px;border-radius:14px;margin-bottom:16px;border:2px dashed #c8c1f0;display:grid;grid-template-columns:1fr 1fr;gap:8px;min-height:70px;max-height:350px;overflow-y:auto;transition:all .2s;}
+.pool.drag-over{border-color:var(--warning);background:#fffbea;}
+.pool-empty-hint{grid-column:1/-1;text-align:center;color:#94a3b8;font-size:.85rem;font-weight:700;padding:15px;display:none;}
+.pool.empty .pool-empty-hint{display:block;}
+
+.card{background:#fff;padding:10px 12px;border-radius:10px;border:2px solid #f0edff;font-size:.82rem;line-height:1.35;cursor:grab;transition:all .2s;user-select:none;position:relative;word-wrap:break-word;overflow-wrap:break-word;}
+.card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 6px 15px rgba(108,92,231,0.15);}
+.card.dragging{opacity:0.5;}
+.card.selected{border-color:var(--warning);background:#fffbea;box-shadow:0 0 0 3px rgba(253,203,110,0.3);}
+.card.locked{cursor:default;}
+.card.locked:hover{transform:none;border-color:var(--success);box-shadow:none;}
+.card.correct{border-color:var(--success);background:#e8f8f0;}
+.card.wrong{border-color:#e74c3c;background:#fdeaea;}
+.card::before{content:attr(data-hero) " ";font-weight:800;}
+
+.buckets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.bucket{background:#fff;border:2px solid #f0edff;border-radius:12px;padding:10px;min-height:90px;transition:all .3s;position:relative;display:flex;flex-direction:column;gap:4px;}
+.bucket.drag-over{border-color:var(--warning);background:#fffbea;transform:scale(1.03);box-shadow:0 0 25px rgba(253,203,110,0.4);}
+.bucket-head{font-weight:800;font-size:.85rem;color:var(--primary);padding-bottom:6px;border-bottom:1px dashed #e0dff5;}
+.bucket-body{display:flex;flex-direction:column;gap:4px;flex:1;min-height:20px;}
+.bucket .card{font-size:.75rem;padding:6px 8px;}
+
+.btn-check{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),#a29bfe);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;transition:all .25s;}
+.btn-check:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(108,92,231,0.4);}
+.btn-reset{width:100%;padding:12px;margin-top:8px;background:transparent;border:2px solid var(--primary);color:var(--primary);border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-reset:hover{background:var(--primary);color:#fff;}
+.btn-next-level{width:100%;padding:14px;margin-top:10px;background:linear-gradient(135deg,var(--success),#00cec9);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;transition:all .25s;display:none;animation:fadeIn .4s;}
+.btn-next-level.show{display:block;}
+.btn-next-level:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,184,148,0.4);}
+
+.score{text-align:center;font-weight:800;margin-top:12px;padding:12px;border-radius:10px;font-size:1.05rem;line-height:1.5;}
+.score.good{background:linear-gradient(135deg,#d6f7e9,#e8f8f0);color:var(--success);}
+.score.ok{background:#fffbea;color:#b8860b;}
+.score.bad{background:#fdeaea;color:#e74c3c;}
+
+/* БЛУМ */
+.bloom-level{background:#fff;border-radius:14px;margin-bottom:12px;overflow:hidden;border:2px solid #f0edff;}
+.bloom-head{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:800;transition:background .2s;}
+.bloom-head:hover{background:var(--light);}
+.bloom-head .lvl{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;flex-shrink:0;}
+.bloom-body{padding:0 18px;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .2s;}
+.bloom-body.open{max-height:1200px;padding:0 18px 18px;}
+.task-item{padding:10px 0;border-top:1px dashed #e0dff5;}
+.task-item:first-child{border-top:none;padding-top:0;}
+.task-item .q{font-weight:700;margin-bottom:6px;}
+.task-item .q-num{color:var(--secondary);}
+.reveal-btn{display:inline-block;padding:6px 14px;background:var(--light);color:var(--primary);border:none;border-radius:20px;font-family:inherit;font-weight:800;font-size:.85rem;cursor:pointer;}
+.reveal-btn:hover{background:var(--primary);color:#fff;}
+.answer{display:none;margin-top:8px;padding:10px;background:#e8f8f0;border-left:4px solid var(--success);border-radius:8px;font-size:.9rem;line-height:1.5;}
+.answer.show{display:block;animation:fadeIn .3s;}
+
+.promo{position:fixed;bottom:20px;right:20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border:2px solid #e2e8f0;border-radius:14px;padding:12px;max-width:240px;box-shadow:0 10px 25px rgba(0,0,0,0.1);z-index:100;display:flex;flex-direction:column;gap:8px;}
+.promo-title{font-size:13px;font-weight:900;background:linear-gradient(90deg,#8E44AD,#E91E63);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.promo-text{font-size:11px;color:#475569;line-height:1.3;}
+.promo-links{display:flex;gap:6px;}
+.promo-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 8px;border-radius:7px;font-size:11px;font-weight:800;text-decoration:none;text-align:center;transition:all .2s;}
+.promo-btn.vk{background:var(--vk);color:#fff;}
+.promo-btn.vk:hover{background:#005bb5;}
+.promo-btn.msg{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;}
+.promo-btn.msg:hover{background:#e2e8f0;}
+
+/* ============ АДАПТИВНОСТЬ ============ */
+
+/* Планшеты (горизонтально) */
+@media (max-width: 1024px) {
+  body { padding: 16px; }
+  .buckets { grid-template-columns: repeat(2, 1fr); }
+  .theory-grid { gap: 12px; }
+  .level-cards { gap: 12px; }
+  .bucket .card { font-size: .72rem; padding: 6px 8px; }
+}
+
+/* Планшеты (вертикально) и большие телефоны */
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  h1 { font-size: 1.6rem; }
+  .subtitle { font-size: .9rem; margin-bottom: 16px; }
+  .tabs { gap: 6px; margin-bottom: 14px; }
+  .tab { padding: 10px 16px; font-size: .85rem; flex: 1; min-width: 100px; }
+  .theory-grid { grid-template-columns: 1fr; gap: 10px; }
+  .type-card { padding: 14px; }
+  .type-title { font-size: .98rem; }
+  .type-desc { font-size: .8rem; }
+  .buckets { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pool { grid-template-columns: 1fr; max-height: 300px; padding: 10px; gap: 6px; }
+  .card { font-size: .78rem; padding: 8px 10px; }
+  .bucket { padding: 8px; min-height: 80px; }
+  .bucket-head { font-size: .8rem; }
+  .bucket .card { font-size: .72rem; padding: 6px 8px; }
+  .level-cards { grid-template-columns: 1fr; gap: 12px; }
+  .level-card { padding: 22px 16px; }
+  .level-card .level-icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .level-card h3 { font-size: 1.15rem; }
+  .level-select h2 { font-size: 1.3rem; }
+  .level-select p { font-size: .88rem; margin-bottom: 16px; }
+  .promo { position: relative; bottom: auto; right: auto; margin-top: 20px; max-width: 100%; }
+  .promo-links { flex-direction: row; }
+  .game-top { flex-direction: column; align-items: stretch; }
+  .game-info { width: 100%; font-size: .85rem; padding: 10px 14px; }
+  .timer-wrap { width: 100%; justify-content: center; padding: 8px 14px; }
+  .timer-value { font-size: 1.3rem; }
+  .modal-box { padding: 18px; max-height: 94vh; border-radius: 16px; }
+  .modal-title { font-size: 1.1rem; padding-right: 36px; }
+  .modal-close { width: 32px; height: 32px; font-size: 18px; top: 10px; right: 10px; }
+  .modal-svg { margin-bottom: 10px; }
+  .modal-info { font-size: .82rem; padding: 8px 12px; }
+  .modal-formula { font-size: .85rem; padding: 10px 12px; }
+  .modal-desc { font-size: .82rem; }
+  .play-btn { font-size: .85rem; padding: 8px 14px; }
+  .modal-slider label { font-size: .82rem; }
+  .bar-track { height: 22px; }
+  .bar-fill { font-size: .65rem; }
+  .sound-toggle { top: 10px; left: 10px; width: 38px; height: 38px; font-size: 16px; }
+  .game-level-badge { font-size: .7rem; padding: 2px 8px; }
+  .back-btn { font-size: .78rem; padding: 6px 10px; }
+  .btn-check, .btn-reset, .btn-next-level { font-size: .92rem; padding: 12px; }
+  .score { font-size: .92rem; padding: 10px; }
+  .best-record { font-size: .75rem; }
+  .bloom-head { padding: 12px 14px; font-size: .9rem; }
+  .bloom-body { padding: 0 14px; }
+  .bloom-body.open { padding: 0 14px 14px; }
+  .task-item .q { font-size: .88rem; }
+  .answer { font-size: .82rem; padding: 8px; }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 480px) {
+  body { padding: 8px; }
+  body::before { font-size: 32px; }
+  h1 { font-size: 1.3rem; margin-bottom: 6px; }
+  .subtitle { font-size: .78rem; margin-bottom: 12px; }
+  .tabs { flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .tab { width: 100%; padding: 10px; font-size: .82rem; }
+  .buckets { grid-template-columns: 1fr; gap: 6px; }
+  .bucket { min-height: 65px; padding: 6px 8px; border-radius: 10px; }
+  .bucket-head { font-size: .78rem; padding-bottom: 4px; margin-bottom: 2px; }
+  .bucket .card { font-size: .68rem; padding: 5px 7px; border-radius: 8px; }
+  .pool { padding: 8px; gap: 6px; max-height: 260px; }
+  .card { font-size: .74rem; padding: 7px 9px; border-radius: 8px; }
+  .game-info { font-size: .78rem; padding: 8px 12px; }
+  .timer-wrap { padding: 6px 12px; gap: 8px; border-radius: 12px; }
+  .timer-icon { font-size: 1.15rem; }
+  .timer-value { font-size: 1.15rem; min-width: 60px; }
+  .timer-label { font-size: .6rem; }
+  .timer-recommended { font-size: .58rem; }
+  .score { font-size: .82rem; padding: 8px; line-height: 1.4; }
+  .best-record { font-size: .7rem; margin-top: 6px; }
+  .modal-overlay { padding: 8px; }
+  .modal-box { padding: 14px; border-radius: 14px; max-height: 96vh; }
+  .modal-title { font-size: .95rem; padding-right: 30px; margin-bottom: 10px; }
+  .modal-close { width: 28px; height: 28px; font-size: 14px; top: 8px; right: 8px; }
+  .modal-svg { margin-bottom: 8px; border-radius: 8px; }
+  .play-btn { font-size: .78rem; padding: 8px 12px; margin-bottom: 10px; }
+  .modal-slider { margin-bottom: 10px; }
+  .modal-slider label { font-size: .75rem; margin-bottom: 4px; }
+  .modal-info { font-size: .75rem; padding: 8px 10px; margin-bottom: 10px; }
+  .modal-formula { font-size: .78rem; padding: 8px 10px; margin-bottom: 8px; }
+  .modal-desc { font-size: .76rem; line-height: 1.4; }
+  .modal-bars { margin-bottom: 10px; }
+  .bar-item { margin-bottom: 8px; }
+  .bar-track { height: 20px; }
+  .bar-fill { font-size: .58rem; padding-right: 4px; }
+  .bar-marker::after { font-size: .62rem; top: -14px; }
+  .sound-toggle { width: 34px; height: 34px; font-size: 14px; top: 8px; left: 8px; }
+  .level-card { padding: 18px 14px; }
+  .level-card .level-icon { font-size: 2.2rem; margin-bottom: 6px; }
+  .level-card h3 { font-size: 1.05rem; }
+  .level-card .level-desc { font-size: .78rem; }
+  .level-card .level-meta { font-size: .7rem; padding: 3px 10px; }
+  .level-card .level-record { font-size: .7rem; margin-top: 8px; }
+  .level-select h2 { font-size: 1.15rem; }
+  .level-select p { font-size: .8rem; margin-bottom: 14px; }
+  .btn-check, .btn-reset, .btn-next-level { font-size: .85rem; padding: 10px; border-radius: 10px; }
+  .game-level-badge { font-size: .65rem; padding: 2px 7px; margin-bottom: 3px; }
+  .back-btn { font-size: .75rem; padding: 6px 10px; margin-bottom: 8px; }
+  .promo { padding: 10px; gap: 6px; }
+  .promo-title { font-size: 12px; }
+  .promo-text { font-size: 10px; line-height: 1.25; }
+  .promo-btn { font-size: 10px; padding: 6px 6px; }
+  .bloom-head { padding: 10px 12px; gap: 8px; font-size: .85rem; }
+  .bloom-head .lvl { width: 26px; height: 26px; font-size: .82rem; }
+  .bloom-body { padding: 0 12px; }
+  .bloom-body.open { padding: 0 12px 12px; }
+  .task-item { padding: 8px 0; }
+  .task-item .q { font-size: .82rem; margin-bottom: 4px; }
+  .reveal-btn { font-size: .78rem; padding: 5px 12px; }
+  .answer { font-size: .78rem; padding: 7px; line-height: 1.4; }
+  .theory-grid { gap: 8px; }
+  .type-card { padding: 12px; }
+  .type-title { font-size: .92rem; gap: 6px; margin-bottom: 8px; }
+  .type-title .emoji { font-size: 1.2rem; }
+  .formula { font-size: .78rem; padding: 8px; }
+  .type-desc { font-size: .76rem; margin-top: 4px; }
+  .click-hint { font-size: .7rem; margin-top: 6px; }
+  .diagram { height: 90px; margin: 6px 0; }
+}
+
+/* Очень узкие экраны */
+@media (max-width: 360px) {
+  h1 { font-size: 1.15rem; }
+  .timer-value { font-size: 1rem; min-width: 55px; }
+  .card { font-size: .7rem; padding: 6px 8px; }
+  .bucket .card { font-size: .64rem; padding: 4px 6px; }
+  .modal-title { font-size: .88rem; }
+  .modal-info, .modal-desc { font-size: .72rem; }
+}
+</style>
+</head>
+<body>
+
+<button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Звук">🔊</button>
+
+<div class="container">
+  <h1>🚗 Движение: 6 типов задач</h1>
+  <p class="subtitle">Интерактивный тренажёр «Мягкой математики»</p>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="theory">📐 Теория</button>
+    <button class="tab" data-tab="game">🎮 Игра Drag&Drop</button>
+    <button class="tab" data-tab="bloom">🎯 Блум</button>
+  </nav>
+
+  <section id="theory" class="screen active">
+    <div class="theory-grid" id="theory-grid"></div>
+  </section>
+
+  <section id="game" class="screen">
+    <div id="level-select" class="level-select">
+      <h2>🎯 Выбери уровень</h2>
+      <p>Начни с разминки, затем переходи к испытанию!</p>
+      <div class="level-cards">
+        <div class="level-card" onclick="startLevel(1)">
+          <div class="level-icon">🌱</div>
+          <h3>Уровень 1</h3>
+          <div class="level-desc">Разминка. По одной задаче каждого типа + 4 случайные.</div>
+          <span class="level-meta">10 задач</span>
+          <span class="level-meta">⏱ 2 мин</span>
+          <div class="level-record empty" id="rec-l1">—</div>
+        </div>
+        <div class="level-card l2" onclick="startLevel(2)">
+          <div class="level-icon">🔥</div>
+          <h3>Уровень 2</h3>
+          <div class="level-desc">Испытание. Полный набор всех типов задач.</div>
+          <span class="level-meta">30 задач</span>
+          <span class="level-meta">⏱ 5 мин</span>
+          <div class="level-record empty" id="rec-l2">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-play" style="display:none;">
+      <button class="back-btn" onclick="showLevelSelect()">← Выбрать уровень</button>
+      <div class="game-top">
+        <div class="game-info">
+          <div><span class="game-level-badge" id="game-level-badge">Уровень 1</span></div>
+          <b>🎯 Задание:</b> Перетаскивай задачи между корзинами и обратно в пул. Таймер идёт до нажатия «Проверить».
+        </div>
+        <div class="timer-wrap" id="timer-wrap">
+          <div class="timer-icon">⏱</div>
+          <div>
+            <div class="timer-label">Время</div>
+            <div class="timer-value" id="timer-value">00:00</div>
+            <div class="timer-recommended" id="timer-recommended">Рекомендуемое: 02:00</div>
+          </div>
+        </div>
+      </div>
+      <div class="pool" id="pool">
+        <div class="pool-empty-hint">Все карточки разложены — можешь перетащить обратно или проверить!</div>
+      </div>
+      <div class="buckets" id="buckets"></div>
+      <button class="btn-check" onclick="checkAll()">✓ Проверить ответы</button>
+      <button class="btn-next-level" id="btn-next-level" onclick="startLevel(2)">🔥 Перейти на уровень 2 →</button>
+      <button class="btn-reset" onclick="resetGame()">↺ Начать заново</button>
+      <div id="score" class="score"></div>
+      <div class="best-record" id="best-record" style="text-align:center;font-size:.8rem;color:#b8860b;font-weight:800;margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <section id="bloom" class="screen">
+    <div id="bloom-list"></div>
+  </section>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2 class="modal-title" id="modal-title">—</h2>
+    <div class="modal-svg" id="modal-svg"></div>
+    <button class="play-btn" onclick="toggleAutoPlay()" id="play-btn">▶ Автопроигрывание</button>
+    <div class="modal-slider">
+      <label>Время: <b id="modal-time">0.0</b> с | <span id="modal-info-inline"></span></label>
+      <input type="range" id="modal-range" min="0" max="100" value="0">
+    </div>
+    <div class="modal-info" id="modal-info"></div>
+    <div class="modal-bars" id="modal-bars"></div>
+    <div class="modal-formula" id="modal-formula"></div>
+    <div class="modal-desc" id="modal-desc"></div>
+  </div>
+</div>
+
+<div class="promo">
+  <div class="promo-title">🚀 Мягкая математика</div>
+  <div class="promo-text">Подготовка к ОГЭ/ЕГЭ, олимпиады и soft skills без стресса.</div>
+  <div class="promo-links">
+    <a href="https://vk.com/smartskillsmaria" target="_blank" class="promo-btn vk">Группа</a>
+    <a href="https://vk.com/im/convo/-229273902?entrypoint=community_page&tab=all" target="_blank" class="promo-btn msg">✉️ Написать</a>
+  </div>
+</div>
+
+<script>
+/* ============ ЗВУК ============ */
+let audioCtx = null, soundEnabled = true;
+function initAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); }
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-toggle');
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('muted', !soundEnabled);
+  if (soundEnabled) { initAudio(); playTone(660, 0.08); }
+}
+function playTone(freq, duration=0.15, type='sine', vol=0.12){
+  if(!soundEnabled || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+const playMeetSound = ()=>{ playTone(660,.1); setTimeout(()=>playTone(880,.15),80); setTimeout(()=>playTone(1320,.3),180); };
+const playFanfare = ()=>{ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,.2,'triangle',.18),i*90)); };
+const playClick = ()=>playTone(400,.05,'sine',.08);
+const playSuccess = ()=>{ playTone(800,.1); setTimeout(()=>playTone(1200,.15),80); };
+const playError = ()=>playTone(200,.2,'sawtooth',.1);
+const playDrop = ()=>playTone(500,.08,'triangle',.1);
+const playRecommendedTime = ()=>{ [880,880,880].forEach((f,i)=>setTimeout(()=>playTone(f,.15,'triangle',.2),i*180)); };
+let lastTickTime = 0;
+function playSlider(){ if(Date.now()-lastTickTime>40){ playTone(220,.03,'square',.03); lastTickTime=Date.now(); } }
+
+/* ============ ЭФФЕКТЫ ============ */
+function burstAt(x,y,emojis=['⭐','✨','💫','🎉','🌟']){
+  for(let i=0;i<14;i++){
+    const p=document.createElement('span');
+    p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.cssText=`position:fixed;left:${x}px;top:${y}px;font-size:${18+Math.random()*14}px;pointer-events:none;z-index:9999;`;
+    const a=(Math.PI*2*i)/14+Math.random()*0.3, d=70+Math.random()*100;
+    p.style.setProperty('--dx',`${Math.cos(a)*d}px`);
+    p.style.setProperty('--dy',`${Math.sin(a)*d}px`);
+    p.style.animation='particleBurst 1.2s ease-out forwards';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1300);
+  }
+}
+function burstFromElement(el, emojis){ const r=el.getBoundingClientRect(); burstAt(r.left+r.width/2, r.top+r.height/2, emojis); }
+function shakeElement(el){ el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'), 600); }
+
+/* ============ ДАННЫЕ ============ */
+const TYPES = {
+  meet:{name:"Встречное",emoji:"🤝"}, chase:{name:"Вдогонку",emoji:"🏃"},
+  opposite:{name:"Противоположные",emoji:"↔️"}, lag:{name:"С отставанием",emoji:"🐢"},
+  circle:{name:"По кругу",emoji:"🔄"}, water:{name:"По воде",emoji:"🌊"}
+};
+
+const PROBLEMS = [
+  {id:1,type:"meet",hero:"🔢 Считарик:",text:"Считарик и Логик вышли навстречу друг другу. Скорость Считарика 60 км/ч, Логика — 80 км/ч. Расстояние 280 км. Через сколько часов они встретятся?"},
+  {id:2,type:"meet",hero:"🧙 Профессор:",text:"Профессор Мягкий и Принцесса Пятая идут навстречу. Профессор — 5 км/ч, Принцесса — 4 км/ч. Расстояние 27 км. Через сколько часов встретятся?"},
+  {id:3,type:"meet",hero:"🐉 Дракон:",text:"Два корабля плывут навстречу: 25 км/ч и 35 км/ч. Между ними 180 км. Через сколько часов встретятся?"},
+  {id:4,type:"meet",hero:"🐱 Котэ:",text:"Котэ-Косинус и Дракон Деления бегут навстречу. 8 м/с и 12 м/с. Расстояние 200 м. Через сколько секунд встретятся?"},
+  {id:5,type:"meet",hero:"👸 Принцесса:",text:"Два автомобиля едут навстречу: 70 км/ч и 90 км/ч. Между городами 320 км. Через сколько часов встретятся?"},
+  {id:6,type:"chase",hero:"🐉 Дракон:",text:"Дракон Деления догоняет Котэ-Косинуса. Скорость Дракона 80 км/ч, Котэ — 60 км/ч. Отставание 100 км. Через сколько часов Дракон догонит?"},
+  {id:7,type:"chase",hero:"🔢 Считарик:",text:"Считарик бежит за Профессором. 6 м/с и 4 м/с. Профессор стартовал на 10 секунд раньше. Через сколько Считарик догонит?"},
+  {id:8,type:"chase",hero:"♟️ Логик:",text:"Мотоциклист догоняет велосипедиста: 50 км/ч и 10 км/ч. Разница 80 км. Через сколько часов догонит?"},
+  {id:9,type:"chase",hero:"♟️ Логик:",text:"Логик догоняет Принцессу. 90 км/ч и 60 км/ч. Отставание 150 км. Через сколько часов догонит?"},
+  {id:10,type:"chase",hero:"🐉 Дракон:",text:"Дракон бежит за Котэ. 12 м/с и 8 м/с. Разница 60 м. Через сколько секунд догонит?"},
+  {id:11,type:"opposite",hero:"🔢 Считарик:",text:"Считарик и Логик разъехались с одной станции в разные стороны. 50 и 70 км/ч. Какое расстояние между ними через 3 часа?"},
+  {id:12,type:"opposite",hero:"🧙 Профессор:",text:"Профессор и Принцесса вышли из одной точки в разные стороны. 4 и 5 км/ч. Какое расстояние через 2 часа?"},
+  {id:13,type:"opposite",hero:"🐱 Котэ:",text:"Два велосипедиста стартовали из одной точки в разные стороны. 12 и 18 км/ч. Какое расстояние через 4 часа?"},
+  {id:14,type:"opposite",hero:"👸 Принцесса:",text:"Мотоциклист и автомобиль выехали из города в противоположных направлениях. 40 и 80 км/ч. Какое расстояние через 2 часа?"},
+  {id:15,type:"opposite",hero:"🐉 Дракон:",text:"Две лодки отплыли от причала в разные стороны. 20 и 30 км/ч. Какое расстояние через 3 часа?"},
+  {id:16,type:"lag",hero:"🔢 Считарик:",text:"Считарик едет быстрее Котэ и уезжает вперёд. 90 и 60 км/ч. Какое расстояние между ними через 2 часа?"},
+  {id:17,type:"lag",hero:"♟️ Логик:",text:"Логик уезжает от Профессора. 100 км/ч и 70 км/ч. Какое расстояние через 3 часа?"},
+  {id:18,type:"lag",hero:"🐉 Дракон:",text:"Дракон летит быстрее Котэ. 80 и 50 км/ч. Какое расстояние через 4 часа?"},
+  {id:19,type:"lag",hero:"🧙 Профессор:",text:"Быстрый поезд отстал от медленного и теперь догоняет его. Скорости 50 и 60 км/ч. Расстояние удаления через 4 часа?"},
+  {id:20,type:"lag",hero:"👸 Принцесса:",text:"Принцесса на велосипеде быстрее Считарика. 25 и 15 км/ч. Какое расстояние через 2 часа?"},
+  {id:21,type:"circle",hero:"🔢 Считарик:",text:"Считарик и Логик бегут по кругу 400 м. Скорости 5 и 3 м/с. Через сколько секунд Логик обгонит Считарика на круг?"},
+  {id:22,type:"circle",hero:"🐱 Котэ:",text:"Два велосипедиста на треке 200 м. Скорости 6 и 4 м/с. Через сколько секунд первый обгонит второго на круг?"},
+  {id:23,type:"circle",hero:"🐉 Дракон:",text:"Лошади на ипподроме 500 м. Скорости 12 и 10 м/с. Через сколько секунд первая обгонит вторую на круг?"},
+  {id:24,type:"circle",hero:"👸 Принцесса:",text:"Марафонцы на кольце 300 м. Скорости 4 и 3 м/с. Через сколько секунд первый обгонит второго на круг?"},
+  {id:25,type:"circle",hero:"🧙 Профессор:",text:"Два бегуна со скоростями 7 и 5 м/с на круге 600 м. Через сколько секунд первый обгонит второго на круг?"},
+  {id:26,type:"water",hero:"🐉 Дракон:",text:"Катер по течению. Собственная 20 км/ч, течение 3 км/ч. Расстояние 46 км. Сколько часов в пути?"},
+  {id:27,type:"water",hero:"🔢 Считарик:",text:"Лодка против течения. Собственная 12 км/ч, течение 2 км/ч. Расстояние 40 км. Сколько часов в пути?"},
+  {id:28,type:"water",hero:"🧙 Профессор:",text:"Теплоход идёт туда и обратно. Собственная 15 км/ч, течение 3 км/ч. В одну сторону 36 км."},
+  {id:29,type:"water",hero:"🐱 Котэ:",text:"Баржа по реке. Собственная 10 км/ч, течение 2 км/ч. Расстояние 24 км по течению. Сколько времени?"},
+  {id:30,type:"water",hero:"👸 Принцесса:",text:"Катер против течения. Собственная 25 км/ч, течение 5 км/ч. Расстояние 60 км. Сколько часов?"}
+];
+
+/* ============ ТЕОРИЯ ============ */
+const THEORY = [
+  {key:'meet',emoji:'🤝',title:'Встречное движение',desc:'Объекты едут навстречу. Скорости складываются.',formula:'V сбл = V₁ + V₂',mini:`<line x1="30" y1="60" x2="370" y2="60" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/><circle cx="80" cy="60" r="16" fill="#6c5ce7"/><polygon points="100,53 108,60 100,67" fill="#6c5ce7"/><text x="80" y="38" font-size="12" fill="#6c5ce7" font-weight="700" text-anchor="middle">V₁ →</text><circle cx="320" cy="60" r="16" fill="#fd79a8"/><polygon points="300,53 292,60 300,67" fill="#fd79a8"/><text x="320" y="38" font-size="12" fill="#fd79a8" font-weight="700" text-anchor="middle">← V₂</text><text x="200" y="100" font-size="11" fill="#636e72" text-anchor="middle">навстречу</text>`},
+  {key:'chase',emoji:'🏃',title:'Вдогонку',desc:'Один догоняет другого в одном направлении.',formula:'V сбл = V₁ − V₂',mini:`<line x1="30" y1="60" x2="370" y2="60" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/><circle cx="100" cy="60" r="16" fill="#6c5ce7"/><polygon points="120,53 128,60 120,67" fill="#6c5ce7"/><text x="100" y="38" font-size="12" fill="#6c5ce7" font-weight="700" text-anchor="middle">V₁ →</text><circle cx="280" cy="60" r="16" fill="#fd79a8"/><polygon points="300,53 308,60 300,67" fill="#fd79a8"/><text x="280" y="38" font-size="12" fill="#fd79a8" font-weight="700" text-anchor="middle">V₂ →</text><text x="190" y="100" font-size="11" fill="#636e72" text-anchor="middle">догоняет</text>`},
+  {key:'opposite',emoji:'↔️',title:'Противоположные',desc:'Разъехались из одной точки. Скорости складываются.',formula:'V удал = V₁ + V₂',mini:`<line x1="30" y1="60" x2="370" y2="60" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/><circle cx="200" cy="60" r="10" fill="#f39c12"/><circle cx="120" cy="60" r="16" fill="#6c5ce7"/><polygon points="100,53 92,60 100,67" fill="#6c5ce7"/><text x="120" y="38" font-size="12" fill="#6c5ce7" font-weight="700" text-anchor="middle">← V₁</text><circle cx="280" cy="60" r="16" fill="#fd79a8"/><polygon points="300,53 308,60 300,67" fill="#fd79a8"/><text x="280" y="38" font-size="12" fill="#fd79a8" font-weight="700" text-anchor="middle">V₂ →</text><text x="200" y="100" font-size="11" fill="#636e72" text-anchor="middle">в разные стороны</text>`},
+  {key:'lag',emoji:'🐢',title:'С отставанием',desc:'Оба в одну сторону, один быстрее. Расстояние растёт.',formula:'V удал = V₂ − V₁',mini:`<line x1="30" y1="60" x2="370" y2="60" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/><circle cx="140" cy="60" r="16" fill="#6c5ce7"/><polygon points="160,53 168,60 160,67" fill="#6c5ce7"/><text x="140" y="38" font-size="12" fill="#6c5ce7" font-weight="700" text-anchor="middle">V₁ →</text><circle cx="260" cy="60" r="16" fill="#fd79a8"/><polygon points="280,53 288,60 280,67" fill="#fd79a8"/><text x="260" y="38" font-size="12" fill="#fd79a8" font-weight="700" text-anchor="middle">V₂ →</text><text x="200" y="100" font-size="11" fill="#636e72" text-anchor="middle">расстояние растёт</text>`},
+  {key:'circle',emoji:'🔄',title:'По кругу',desc:'Обгон на один круг. Разность скоростей.',formula:'t = L ÷ (V₁ − V₂)',mini:`<circle cx="200" cy="60" r="38" fill="none" stroke="#a29bfe" stroke-width="2"/><circle cx="200" cy="22" r="10" fill="#6c5ce7"/><circle cx="238" cy="60" r="10" fill="#fd79a8"/><text x="200" y="110" font-size="11" fill="#636e72" text-anchor="middle">длина L</text>`},
+  {key:'water',emoji:'🌊',title:'По воде',desc:'Течение помогает или мешает.',formula:'V по теч. = V + Vт · V против = V − Vт',mini:`<path d="M 20 80 Q 60 72, 100 80 T 180 80 T 260 80 T 340 80 T 380 80" fill="none" stroke="#0984e3" stroke-width="2"/><text x="200" y="45" font-size="26">⛵</text><text x="200" y="30" font-size="11" fill="#0984e3" font-weight="700" text-anchor="middle">V + Vт →</text><text x="200" y="105" font-size="10" fill="#636e72" text-anchor="middle">течение →</text>`}
+];
+
+function renderTheory(){
+  document.getElementById('theory-grid').innerHTML = THEORY.map(t=>`
+    <div class="type-card" onclick="openModal('${t.key}')">
+      <div class="type-title"><span class="emoji">${t.emoji}</span> ${t.title}</div>
+      <svg class="diagram" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet">${t.mini}</svg>
+      <div class="formula">${t.formula}</div>
+      <p class="type-desc">${t.desc}</p>
+      <div class="click-hint">👆 Нажми, чтобы открыть тренажёр</div>
+    </div>`).join('');
+}
+
+/* ============ СЦЕНЫ (с эффектами!) ============ */
+const SCENES = {
+  meet: {
+    title:'🤝 Встречное движение', formula:'V сближения = V₁ + V₂',
+    desc:'Два объекта движутся навстречу друг другу.',
+    state:{v1:6,v2:4,D:100,tEnd:12},
+    lastMeet: false,
+    render(t,s){
+      const time=t/100*s.tEnd, s1=s.v1*time, s2=s.v2*time;
+      const remaining=Math.max(0,s.D-s1-s2);
+      const scale=540/s.D;
+      const x1=30+s1*scale, x2=570-s2*scale;
+      const met=remaining<=0.01;
+      if(met && !this.lastMeet){
+        this.lastMeet=true;
+        playMeetSound();
+        const el=document.getElementById('modal-svg');
+        if(el){ burstFromElement(el,['🎉','✨','⭐','💥']); shakeElement(document.getElementById('modal-box')); }
+      } else if(!met){ this.lastMeet=false; }
+      const meetX=met?(x1+x2)/2:null;
+      const burst=met?`<circle cx="${meetX}" cy="100" r="30" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0.6"><animate attributeName="r" from="10" to="50" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.8" to="0" dur="1s" repeatCount="indefinite"/></circle>`:'';
+      const svg=`<svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet"><line x1="30" y1="100" x2="570" y2="100" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="6,6"/><circle cx="${x1}" cy="100" r="20" fill="#6c5ce7"/><text x="${x1}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v1}</text><polygon points="${x1+22},93 ${x1+34},100 ${x1+22},107" fill="#6c5ce7"/><text x="${x1}" y="68" font-size="12" fill="#6c5ce7" text-anchor="middle" font-weight="700">V₁</text><circle cx="${x2}" cy="100" r="20" fill="#fd79a8"/><text x="${x2}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v2}</text><polygon points="${x2-22},93 ${x2-34},100 ${x2-22},107" fill="#fd79a8"/><text x="${x2}" y="68" font-size="12" fill="#fd79a8" text-anchor="middle" font-weight="700">V₂</text>${burst}<line x1="${x1}" y1="140" x2="${x2}" y2="140" stroke="${met?'#fdcb6e':'#00b894'}" stroke-width="2"/><text x="${(x1+x2)/2}" y="158" font-size="12" fill="${met?'#fdcb6e':'#00b894'}" text-anchor="middle" font-weight="700">${met?'🎉 ВСТРЕТИЛИСЬ!':remaining.toFixed(1)+' м'}</text></svg>`;
+      return {svg,
+        info:met?`✅ Встретились через ${time.toFixed(1)} с.`:`S₁=${s1.toFixed(1)}м, S₂=${s2.toFixed(1)}м. Осталось: ${remaining.toFixed(1)}м.`,
+        bars:[
+          {width:Math.min(100,s1/s.D*100),color:'#6c5ce7',label:''},
+          {width:Math.min(100,s2/s.D*100),color:'#fd79a8',label:''},
+          {width:Math.max(0,remaining/s.D*100),color:'#cbd5e1',label:'',textColor:'#334155'}
+        ],
+        inline:met?'🎉 Встреча!':`S₁+S₂ = ${(s1+s2).toFixed(0)}м`};
+    }
+  },
+  chase: {
+    title:'🏃 Вдогонку', formula:'V сближения = V₁ − V₂',
+    desc:'Один догоняет другого.',
+    state:{v1:8,v2:4,gap:80,tEnd:24},
+    lastMeet: false,
+    render(t,s){
+      const time=t/100*s.tEnd, s1=s.v1*time, s2=s.v2*time;
+      const remaining=Math.max(0,s.gap-(s1-s2));
+      const scale=480/(s.gap+s.v1*s.tEnd);
+      const xA=30+s1*scale, xB=30+s.gap*scale+s2*scale;
+      const met=remaining<=0.01;
+      if(met && !this.lastMeet){
+        this.lastMeet=true;
+        playMeetSound();
+        const el=document.getElementById('modal-svg');
+        if(el){ burstFromElement(el,['🎯','💥','✨','⭐']); shakeElement(document.getElementById('modal-box')); }
+      } else if(!met){ this.lastMeet=false; }
+      const svg=`<svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet"><line x1="30" y1="100" x2="570" y2="100" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="6,6"/><circle cx="${xA}" cy="100" r="20" fill="#6c5ce7"/><text x="${xA}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v1}</text><polygon points="${xA+22},93 ${xA+34},100 ${xA+22},107" fill="#6c5ce7"/><text x="${xA}" y="68" font-size="12" fill="#6c5ce7" text-anchor="middle" font-weight="700">V₁</text><circle cx="${xB}" cy="100" r="20" fill="#fd79a8"/><text x="${xB}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v2}</text><polygon points="${xB+22},93 ${xB+34},100 ${xB+22},107" fill="#fd79a8"/><text x="${xB}" y="68" font-size="12" fill="#fd79a8" text-anchor="middle" font-weight="700">V₂</text><line x1="${xA}" y1="140" x2="${xB}" y2="140" stroke="${met?'#fdcb6e':'#00b894'}" stroke-width="2"/><text x="${(xA+xB)/2}" y="158" font-size="12" fill="${met?'#fdcb6e':'#00b894'}" text-anchor="middle" font-weight="700">${met?'🎯 ДОГНАЛ!':'разрыв '+remaining.toFixed(1)+' м'}</text></svg>`;
+      return {svg,
+        info:met?`✅ Догнал через ${time.toFixed(1)} с.`:`Разрыв: ${remaining.toFixed(1)}м.`,
+        bars:[
+          {width:Math.max(0,remaining/s.gap*100),color:'#fd79a8',label:''},
+          {width:Math.min(100,(s.gap-remaining)/s.gap*100),color:'#00b894',label:''}
+        ],
+        inline:`t ≈ ${s.tEnd}s`};
+    }
+  },
+  opposite: {
+    title:'↔️ Противоположные', formula:'V удаления = V₁ + V₂',
+    desc:'Разъехались из одной точки.',
+    state:{v1:6,v2:4,tEnd:10},
+    render(t,s){
+      const time=t/100*s.tEnd, s1=s.v1*time, s2=s.v2*time;
+      const maxDist=(s.v1+s.v2)*s.tEnd;
+      const scale=240/maxDist;
+      const x1=300-s1*scale, x2=300+s2*scale;
+      const svg=`<svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet"><line x1="30" y1="100" x2="570" y2="100" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="6,6"/><circle cx="300" cy="100" r="6" fill="#f39c12"/><circle cx="${x1}" cy="100" r="20" fill="#6c5ce7"/><text x="${x1}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v1}</text><polygon points="${x1-22},93 ${x1-34},100 ${x1-22},107" fill="#6c5ce7"/><circle cx="${x2}" cy="100" r="20" fill="#fd79a8"/><text x="${x2}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v2}</text><polygon points="${x2+22},93 ${x2+34},100 ${x2+22},107" fill="#fd79a8"/><line x1="${x1}" y1="140" x2="${x2}" y2="140" stroke="#00b894" stroke-width="2"/><text x="${(x1+x2)/2}" y="158" font-size="12" fill="#00b894" text-anchor="middle" font-weight="700">${(s1+s2).toFixed(1)} м</text></svg>`;
+      return {svg,
+        info:`Расстояние: ${(s1+s2).toFixed(1)}м.`,
+        bars:[
+          {width:s1/maxDist*100,color:'#6c5ce7',label:''},
+          {width:s2/maxDist*100,color:'#fd79a8',label:''},
+          {width:(maxDist-s1-s2)/maxDist*100,color:'#cbd5e1',label:''}
+        ],
+        inline:`расстояние = ${(s1+s2).toFixed(0)}м`};
+    }
+  },
+  lag: {
+    title:'🐢 Отставание', formula:'V удаления = V₂ − V₁',
+    desc:'Один быстрее, расстояние растёт.',
+    state:{v1:4,v2:8,tEnd:10},
+    render(t,s){
+      const time=t/100*s.tEnd, s1=s.v1*time, s2=s.v2*time;
+      const gap=Math.max(0,s2-s1);
+      const maxGap=(s.v2-s.v1)*s.tEnd;
+      const scale=380/(s.v2*s.tEnd);
+      const x1=100+s1*scale, x2=100+s2*scale;
+      const svg=`<svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet"><line x1="30" y1="100" x2="570" y2="100" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="6,6"/><circle cx="${x1}" cy="100" r="20" fill="#6c5ce7"/><text x="${x1}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v1}</text><polygon points="${x1+22},93 ${x1+34},100 ${x1+22},107" fill="#6c5ce7"/><circle cx="${x2}" cy="100" r="20" fill="#fd79a8"/><text x="${x2}" y="105" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${s.v2}</text><polygon points="${x2+22},93 ${x2+34},100 ${x2+22},107" fill="#fd79a8"/><line x1="${x1}" y1="140" x2="${x2}" y2="140" stroke="#00b894" stroke-width="2"/><text x="${(x1+x2)/2}" y="158" font-size="12" fill="#00b894" text-anchor="middle" font-weight="700">разрыв ${gap.toFixed(1)} м</text></svg>`;
+      return {svg,
+        info:`Разрыв: ${gap.toFixed(1)}м.`,
+        bars:[
+          {width:(s2/maxGap)*100,color:'#fd79a8',label:''},
+          {width:(s1/maxGap)*100,color:'#6c5ce7',label:''}
+        ],
+        inline:`разрыв = ${gap.toFixed(0)}м`};
+    }
+  },
+  circle: {
+    title:'🔄 По кругу', formula:'t обгона = L ÷ (V₁ − V₂)',
+    desc:'Ползунок до 2 полных обгонов. Каждый обгон — фанфары и салют!',
+    state:{v1:8,v2:4,R:80},
+    lastOvertake: 0,
+    render(t,s){
+      const cx=300, cy=110, R=s.R;
+      const L=2*Math.PI*R;
+      const tOvertake=L/(s.v1-s.v2);
+      const tEnd=tOvertake*2.2;
+      const time=t/100*tEnd;
+      const a1=(s.v1/R)*time, a2=(s.v2/R)*time;
+      const diff=a1-a2;
+      const overtakes=Math.floor(diff/(2*Math.PI));
+      if(overtakes>this.lastOvertake){
+        this.lastOvertake=overtakes;
+        playFanfare();
+        const el=document.getElementById('modal-svg');
+        if(el){ burstFromElement(el,['🏆','🎉','⭐','🌟','🎊']); }
+      }
+      const p1={x:cx+R*Math.cos(a1),y:cy+R*Math.sin(a1)}, p2={x:cx+R*Math.cos(a2),y:cy+R*Math.sin(a2)};
+      const ang1=Math.atan2(Math.cos(a1),-Math.sin(a1))*180/Math.PI;
+      const ang2=Math.atan2(Math.cos(a2),-Math.sin(a2))*180/Math.PI;
+      const svg=`<svg viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#a29bfe" stroke-width="3"/>${overtakes>=1?`<text x="300" y="30" font-size="16" text-anchor="middle" font-weight="900" fill="#f39c12">🏆 Обгон × ${overtakes}</text>`:''}<circle cx="${p1.x}" cy="${p1.y}" r="14" fill="#6c5ce7"/><text x="${p1.x}" y="${p1.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="700">V₁</text><polygon points="-8,-5 5,0 -8,5" fill="#6c5ce7" transform="translate(${p1.x-Math.sin(a1)*24},${p1.y+Math.cos(a1)*24}) rotate(${ang1})"/><circle cx="${p2.x}" cy="${p2.y}" r="14" fill="#fd79a8"/><text x="${p2.x}" y="${p2.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="700">V₂</text><polygon points="-8,-5 5,0 -8,5" fill="#fd79a8" transform="translate(${p2.x-Math.sin(a2)*24},${p2.y+Math.cos(a2)*24}) rotate(${ang2})"/><text x="${cx}" y="${cy+R+30}" font-size="12" fill="#636e72" text-anchor="middle">L = ${L.toFixed(0)} м · t обгона = ${tOvertake.toFixed(0)} с</text></svg>`;
+      const progress=Math.min(100,(diff/(2*Math.PI))/2*100);
+      return {svg,
+        info:`Обгонов: ${overtakes}.`,
+        bars:[{width:progress,color:'#00b894',label:''}],
+        inline:`обгонов: ${overtakes}`};
+    }
+  },
+  water: {
+    title:'🌊 По воде', formula:'V по теч. = V + Vт · V против = V − Vт',
+    desc:'Сравниваем с «идеалом» V·t.',
+    state:{V:10,Vt:2,tEnd:12},
+    render(t,s){
+      const time=t/100*s.tEnd;
+      const downSpeed=s.V+s.Vt, upSpeed=s.V-s.Vt;
+      const sDown=downSpeed*time, sUp=upSpeed*time, sNoCurrent=s.V*time;
+      const maxDown=downSpeed*s.tEnd;
+      const scale=500/maxDown, startX=50;
+      const xTop=startX+sDown*scale, xBot=startX+sUp*scale, xRef=startX+sNoCurrent*scale;
+      const svg=`<svg viewBox="0 0 600 240" preserveAspectRatio="xMidYMid meet"><line x1="${xRef}" y1="30" x2="${xRef}" y2="210" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/><text x="${xRef}" y="25" font-size="10" fill="#94a3b8" text-anchor="middle" font-weight="700">V·t</text><text x="20" y="65" font-size="12" fill="#0984e3" font-weight="700">По течению:</text><line x1="30" y1="95" x2="570" y2="95" stroke="#cbd5e1" stroke-width="2"/><circle cx="${xTop}" cy="95" r="20" fill="#0984e3"/><text x="${xTop}" y="100" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${downSpeed}</text><polygon points="${xTop+22},88 ${xTop+34},95 ${xTop+22},102" fill="#0984e3"/><text x="20" y="150" font-size="12" fill="#e17055" font-weight="700">Против течения:</text><line x1="30" y1="180" x2="570" y2="180" stroke="#cbd5e1" stroke-width="2"/><circle cx="${xBot}" cy="180" r="20" fill="#e17055"/><text x="${xBot}" y="185" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">${upSpeed}</text><polygon points="${xBot+22},173 ${xBot+34},180 ${xBot+22},187" fill="#e17055"/></svg>`;
+      const bars=[
+        {width:(sDown/maxDown)*100,color:'#0984e3',label:'',markerAt:(sNoCurrent/maxDown)*100,markerLabel:'V·t'},
+        {width:(sUp/maxDown)*100,color:'#e17055',label:'',markerAt:(sNoCurrent/maxDown)*100,markerLabel:'V·t'}
+      ];
+      return {svg,
+        info:`По теч.: ${sDown.toFixed(1)}м. Против: ${sUp.toFixed(1)}м.`,
+        bars,
+        inline:`+Vт=${downSpeed} · −Vт=${upSpeed}`};
+    }
+  }
+};
+
+let currentScene = null, animationId = null, autoPlaying = false;
+function openModal(key){
+  playClick();
+  currentScene = SCENES[key];
+  // Сброс счётчиков эффектов
+  currentScene.lastMeet = false;
+  currentScene.lastOvertake = 0;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('modal-title').textContent = currentScene.title;
+  document.getElementById('modal-formula').textContent = currentScene.formula;
+  document.getElementById('modal-desc').textContent = currentScene.desc;
+  document.getElementById('modal-range').value = 0;
+  document.getElementById('play-btn').textContent = '▶ Автопроигрывание';
+  document.getElementById('play-btn').classList.remove('playing');
+  if(animationId){ cancelAnimationFrame(animationId); animationId = null; autoPlaying = false; }
+  updateScene();
+}
+function closeModal(){ playClick(); document.getElementById('modal-overlay').classList.remove('show'); currentScene = null; if(animationId){ cancelAnimationFrame(animationId); animationId = null; autoPlaying = false; } }
+function handleOverlayClick(e){ if(e.target.id==='modal-overlay') closeModal(); }
+function onSlider(){ updateScene(); playSlider(); }
+function updateScene(){
+  if(!currentScene) return;
+  const t = parseInt(document.getElementById('modal-range').value);
+  const data = currentScene.render(t, currentScene.state);
+  document.getElementById('modal-svg').innerHTML = data.svg;
+  document.getElementById('modal-info').textContent = data.info;
+  document.getElementById('modal-time').textContent = (t/100*(currentScene.state.tEnd||100)).toFixed(1);
+  document.getElementById('modal-info-inline').textContent = data.inline || '';
+  document.getElementById('modal-bars').innerHTML = data.bars.map(b=>{
+    const markerHtml = b.markerAt !== undefined ? `<div class="bar-marker" style="left:${b.markerAt}%" data-label="${b.markerLabel||''}"></div>` : '';
+    return `<div class="bar-item"><div class="bar-track"><div class="bar-fill" style="width:${b.width}%;background:${b.color};color:${b.textColor||'#fff'};">${b.label||''}</div>${markerHtml}</div></div>`;
+  }).join('');
+}
+document.getElementById('modal-range').addEventListener('input', onSlider);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+function toggleAutoPlay(){
+  playClick();
+  const btn = document.getElementById('play-btn');
+  const slider = document.getElementById('modal-range');
+  if(autoPlaying){ autoPlaying=false; if(animationId){cancelAnimationFrame(animationId);animationId=null;} btn.textContent='▶ Автопроигрывание'; btn.classList.remove('playing'); return; }
+  autoPlaying = true; btn.textContent = '⏸ Остановить'; btn.classList.add('playing'); slider.value = 0; updateScene();
+  const start = performance.now(), dur = 4500;
+  function step(now){
+    if(!autoPlaying) return;
+    const p = Math.min((now-start)/dur, 1);
+    slider.value = p*100;
+    updateScene();
+    if(p<1){ animationId = requestAnimationFrame(step); }
+    else { autoPlaying=false; btn.textContent='▶ Автопроигрывание'; btn.classList.remove('playing'); animationId=null; }
+  }
+  animationId = requestAnimationFrame(step);
+}
+
+/* ============ ТАБЫ ============ */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    playClick();
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ============ ТАЙМЕР ============ */
+let RECOMMENDED_SECONDS = 300;
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+let recommendedSignalPlayed = false;
+let gameFinished = false;
+
+function formatTime(sec){ const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+function updateTimerDisplay(){
+  const val = document.getElementById('timer-value');
+  const wrap = document.getElementById('timer-wrap');
+  val.textContent = formatTime(timerSeconds);
+  wrap.classList.remove('warning','danger');
+  if(timerSeconds >= RECOMMENDED_SECONDS+60) wrap.classList.add('danger');
+  else if(timerSeconds >= RECOMMENDED_SECONDS) wrap.classList.add('warning');
+}
+
+function startTimer(){
+  if(timerRunning) return;
+  timerRunning = true;
+  timerSeconds = 0;
+  recommendedSignalPlayed = false;
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    timerSeconds++;
+    updateTimerDisplay();
+    if(timerSeconds === RECOMMENDED_SECONDS && !recommendedSignalPlayed){
+      recommendedSignalPlayed = true;
+      playRecommendedTime();
+      const el = document.getElementById('timer-recommended');
+      el.textContent = `⏰ Рекомендуемое (${formatTime(RECOMMENDED_SECONDS)}) достигнуто!`;
+      el.style.color = '#f39c12';
+      el.style.fontWeight = '800';
+    }
+  }, 1000);
+}
+
+function stopTimer(){ timerRunning=false; if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
+
+/* ============ ИГРА ============ */
+let selectedCard = null;
+let gameChecked = false;
+let currentLevel = 1;
+let currentProblems = [];
+
+function onFirstInteraction(){ if(!timerRunning && !gameFinished && !gameChecked && timerSeconds === 0){ startTimer(); } }
+
+function pickProblemsForLevel(level){
+  if(level === 2) return [...PROBLEMS].sort(()=>Math.random()-0.5);
+  const byType = {};
+  PROBLEMS.forEach(p => { if(!byType[p.type]) byType[p.type] = []; byType[p.type].push(p); });
+  const picked = [];
+  Object.values(byType).forEach(arr => { picked.push(arr[Math.floor(Math.random()*arr.length)]); });
+  const remaining = PROBLEMS.filter(p => !picked.includes(p)).sort(()=>Math.random()-0.5);
+  picked.push(...remaining.slice(0, 4));
+  return picked.sort(()=>Math.random()-0.5);
+}
+
+function startLevel(level){
+  playClick();
+  currentLevel = level;
+  RECOMMENDED_SECONDS = level === 1 ? 120 : 300;
+  currentProblems = pickProblemsForLevel(level);
+  document.getElementById('level-select').style.display = 'none';
+  document.getElementById('game-play').style.display = 'block';
+  document.getElementById('game-level-badge').textContent = level === 1 ? 'Уровень 1 · Разминка' : 'Уровень 2 · Испытание';
+  document.getElementById('game-level-badge').className = 'game-level-badge' + (level === 2 ? ' l2' : '');
+  document.getElementById('btn-next-level').classList.remove('show');
+  initGame();
+}
+
+function showLevelSelect(){
+  playClick();
+  stopTimer();
+  document.getElementById('game-play').style.display = 'none';
+  document.getElementById('level-select').style.display = 'block';
+  updateLevelRecords();
+}
+
+function updateLevelRecords(){
+  const r1 = localStorage.getItem('motionGameBestTime_L1');
+  const r2 = localStorage.getItem('motionGameBestTime_L2');
+  const el1 = document.getElementById('rec-l1'), el2 = document.getElementById('rec-l2');
+  if(r1){ el1.textContent = `🏆 ${formatTime(parseInt(r1))}`; el1.classList.remove('empty'); }
+  else { el1.textContent = 'Рекорда нет'; el1.classList.add('empty'); }
+  if(r2){ el2.textContent = `🏆 ${formatTime(parseInt(r2))}`; el2.classList.remove('empty'); }
+  else { el2.textContent = 'Рекорда нет'; el2.classList.add('empty'); }
+}
+
+function initGame(){
+  stopTimer();
+  timerSeconds = 0;
+  timerRunning = false;
+  recommendedSignalPlayed = false;
+  gameFinished = false;
+  gameChecked = false;
+  updateTimerDisplay();
+  const el = document.getElementById('timer-recommended');
+  el.textContent = `Рекомендуемое: ${formatTime(RECOMMENDED_SECONDS)}`;
+  el.style.color = '';
+  el.style.fontWeight = '';
+  const pool = document.getElementById('pool');
+  const bucketsEl = document.getElementById('buckets');
+  pool.innerHTML = '<div class="pool-empty-hint">Все карточки разложены — можешь перетащить обратно или проверить!</div>';
+  pool.classList.remove('empty');
+  bucketsEl.innerHTML = '';
+  selectedCard = null;
+  [...currentProblems].forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.draggable = true;
+    card.dataset.id = p.id;
+    card.dataset.type = p.type;
+    card.dataset.hero = p.hero;
+    card.textContent = p.text;
+    card.addEventListener('dragstart', e=>{
+      if(gameChecked){ e.preventDefault(); return; }
+      onFirstInteraction();
+      e.dataTransfer.setData('text/plain', p.id);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', ()=>card.classList.remove('dragging'));
+    card.addEventListener('click', ()=>{
+      if(gameChecked || card.classList.contains('locked')) return;
+      onFirstInteraction();
+      playClick();
+      if(selectedCard === card){ card.classList.remove('selected'); selectedCard = null; }
+      else { if(selectedCard) selectedCard.classList.remove('selected'); card.classList.add('selected'); selectedCard = card; }
+    });
+    pool.appendChild(card);
+  });
+  Object.entries(TYPES).forEach(([key, val])=>{
+    const bucket = document.createElement('div');
+    bucket.className = 'bucket';
+    bucket.dataset.type = key;
+    bucket.innerHTML = `<div class="bucket-head"><span>${val.emoji}</span> ${val.name}</div><div class="bucket-body"></div>`;
+    bucket.addEventListener('dragover', e=>{ if(gameChecked) return; e.preventDefault(); bucket.classList.add('drag-over'); });
+    bucket.addEventListener('dragleave', ()=>bucket.classList.remove('drag-over'));
+    bucket.addEventListener('drop', e=>{
+      e.preventDefault(); bucket.classList.remove('drag-over');
+      if(gameChecked) return;
+      const id = e.dataTransfer.getData('text/plain');
+      const card = document.querySelector(`.card[data-id="${id}"]`);
+      if(card && !card.classList.contains('locked')){
+        onFirstInteraction();
+        const body = bucket.querySelector('.bucket-body');
+        body.appendChild(card);
+        card.classList.remove('selected');
+        selectedCard = null;
+        playDrop();
+        updatePoolEmpty();
+      }
+    });
+    bucket.addEventListener('click', ()=>{
+      if(gameChecked) return;
+      if(selectedCard && !selectedCard.classList.contains('locked')){
+        onFirstInteraction();
+        const body = bucket.querySelector('.bucket-body');
+        body.appendChild(selectedCard);
+        selectedCard.classList.remove('selected');
+        selectedCard = null;
+        playDrop();
+        updatePoolEmpty();
+      }
+    });
+    bucketsEl.appendChild(bucket);
+  });
+  pool.addEventListener('dragover', e=>{ if(gameChecked) return; e.preventDefault(); pool.classList.add('drag-over'); });
+  pool.addEventListener('dragleave', ()=>pool.classList.remove('drag-over'));
+  pool.addEventListener('drop', e=>{
+    e.preventDefault(); pool.classList.remove('drag-over');
+    if(gameChecked) return;
+    const id = e.dataTransfer.getData('text/plain');
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if(card && !card.classList.contains('locked')){
+      pool.appendChild(card);
+      card.classList.remove('selected');
+      selectedCard = null;
+      playDrop();
+      updatePoolEmpty();
+    }
+  });
+  document.getElementById('score').className = 'score';
+  document.getElementById('score').textContent = '';
+  loadBestRecord();
+}
+
+function updatePoolEmpty(){
+  const pool = document.getElementById('pool');
+  pool.classList.toggle('empty', pool.querySelectorAll('.card').length === 0);
+}
+
+function loadBestRecord(){
+  const key = currentLevel === 1 ? 'motionGameBestTime_L1' : 'motionGameBestTime_L2';
+  const best = localStorage.getItem(key);
+  const el = document.getElementById('best-record');
+  if(best) el.textContent = `🏆 Лучший результат (уровень ${currentLevel}): ${formatTime(parseInt(best))}`;
+  else el.textContent = `🏆 Рекорда на уровне ${currentLevel} пока нет — стань первым!`;
+}
+
+function saveBestRecord(seconds){
+  const key = currentLevel === 1 ? 'motionGameBestTime_L1' : 'motionGameBestTime_L2';
+  const best = localStorage.getItem(key);
+  if(!best || seconds < parseInt(best)){ localStorage.setItem(key, seconds); return true; }
+  return false;
+}
+
+function checkAll(){
+  if(gameChecked) return;
+  playClick();
+  gameChecked = true;
+  gameFinished = true;
+  stopTimer();
+  let correct = 0;
+  const total = currentProblems.length;
+  document.querySelectorAll('.bucket .card').forEach(card=>{
+    const bucket = card.parentElement.closest('.bucket');
+    if(bucket.dataset.type === card.dataset.type){ card.classList.add('correct'); card.classList.remove('wrong'); correct++; }
+    else { card.classList.add('wrong'); card.classList.remove('correct'); }
+    card.classList.add('locked');
+    card.draggable = false;
+  });
+  document.querySelectorAll('.pool .card').forEach(card=>{ card.classList.add('locked'); card.draggable = false; });
+  const scoreEl = document.getElementById('score');
+  const timeSpent = timerSeconds;
+  const diff = timeSpent - RECOMMENDED_SECONDS;
+  let speedEmoji, speedText;
+  if(timeSpent <= RECOMMENDED_SECONDS * 0.5){ speedEmoji='⚡'; speedText='Молния!'; }
+  else if(timeSpent <= RECOMMENDED_SECONDS){ speedEmoji='🏎️'; speedText='В рамках норматива!'; }
+  else if(timeSpent <= RECOMMENDED_SECONDS * 1.2){ speedEmoji='⏰'; speedText='Чуть больше рекомендуемого'; }
+  else { speedEmoji='🐢'; speedText='Тренируйся!'; }
+  let resultText = `Правильно: ${correct} из ${total} · ⏱ ${formatTime(timeSpent)} ${speedEmoji} ${speedText}`;
+  if(diff > 0 && correct === total) resultText += ` (+${diff} с)`;
+  if(correct === total){
+    scoreEl.className = 'score good';
+    playSuccess();
+    burstAt(window.innerWidth/2, window.innerHeight/2, ['🎉','🏆','✨','⭐']);
+    scoreEl.textContent = resultText;
+    if(saveBestRecord(timeSpent)){
+      setTimeout(()=>{
+        scoreEl.textContent = `🏆 НОВЫЙ РЕКОРД! ${resultText}`;
+        burstAt(window.innerWidth/2, window.innerHeight/3, ['👑','🏆','🥇','✨','⭐']);
+        playFanfare();
+        loadBestRecord();
+      }, 800);
+    }
+  } else if(correct >= total * 0.7){
+    scoreEl.className = 'score ok';
+    playTone(660, .15);
+    scoreEl.textContent = resultText;
+  } else {
+    scoreEl.className = 'score bad';
+    playError();
+    scoreEl.textContent = resultText;
+  }
+  if(currentLevel === 1){
+    const btn = document.getElementById('btn-next-level');
+    btn.classList.add('show');
+    btn.textContent = correct === total ? '🔥 Отлично! Перейти на уровень 2 →' : (correct >= total * 0.7 ? '🔥 Перейти на уровень 2 →' : '🔥 Попробовать уровень 2 →');
+  }
+}
+
+function resetGame(){ playClick(); initGame(); }
+
+/* ============ БЛУМ ============ */
+const BLOOM = [
+  {level:"Знание",color:"#6c5ce7",emoji:"📖",tasks:[
+    {q:"Назови все 6 типов задач на движение и формулы.",a:"1) Встречное: V₁+V₂. 2) Вдогонку: V₁−V₂. 3) Противоположные: V₁+V₂. 4) Отставание: V₂−V₁. 5) По кругу: t = L ÷ (V₁−V₂). 6) По воде: V+Vтеч / V−Vтеч."},
+    {q:"Что такое скорость сближения? А скорость удаления?",a:"Сближение — сумма или разность скоростей при движении навстречу/вдогонку. Удаление — сумма или разность при разъезде/отставании."}
+  ]},
+  {level:"Понимание",color:"#0984e3",emoji:"💡",tasks:[
+    {q:"Почему при встречном движении скорости складываются?",a:"Оба движутся навстречу, сближаются с общей скоростью, равной сумме скоростей."},
+    {q:"Почему у плота нет собственной скорости?",a:"Плот без двигателя плывёт со скоростью течения реки. V плота = V течения."}
+  ]},
+  {level:"Применение",color:"#00b894",emoji:"🛠",tasks:[
+    {q:"Считарик и Логик бегут навстречу. 8 и 12 м/с, расстояние 100 м. Через сколько секунд встретятся?",a:"V сбл = 8+12 = 20 м/с. t = 100÷20 = 5 секунд."},
+    {q:"Катер: собственная 18 км/ч, течение 2 км/ч. За 3 часа по течению — какое расстояние?",a:"V по теч = 18+2 = 20 км/ч. S = 20×3 = 60 км."}
+  ]},
+  {level:"Анализ",color:"#f39c12",emoji:"🔍",tasks:[
+    {q:"Сравни: (А) навстречу 60 и 40 км/ч; (Б) вдогонку 60 и 40 км/ч. Чем отличаются скорости сближения?",a:"(А) 60+40 = 100 км/ч. (Б) 60−40 = 20 км/ч. В (А) сближаются в 5 раз быстрее."},
+    {q:"Найди ошибку: «Плот плывёт со скоростью 5 км/ч. Его собственная скорость 5 км/ч».",a:"Ошибка: у плота НЕТ собственной скорости. Скорость 5 км/ч — это скорость течения реки."}
+  ]},
+  {level:"Синтез",color:"#fd79a8",emoji:"✨",tasks:[
+    {q:"Придумай задачу на движение по кругу с Драконом и Котэ.",a:"Пример: «Дракон и Котэ на кольце 500 м. Дракон 10 м/с, Котэ 6 м/с. Через сколько Дракон обгонит Котэ на круг?» Решение: 500÷(10−6) = 125 с."},
+    {q:"Составь задачу, где одновременно движение по воде и встречное.",a:"Пример: «Два катера навстречу: первый по течению 18, второй против 12. Между ними 150 км. Через сколько встретятся?» Ответ: 150÷(18+12) = 5 ч."}
+  ]},
+  {level:"Оценка",color:"#e74c3c",emoji:"🏆",tasks:[
+    {q:"В каком типе задач сложнее всего найти ошибку и почему?",a:"Свободный ответ. Чаще всего — по кругу (забывают про длину круга) и с отставанием (путают с вдогонку)."},
+    {q:"Оцени: для какого типа задач чаще всего ошибаются ученики?",a:"Обычно по кругу и по воде. Главное — понимать, что происходит с расстоянием между объектами."}
+  ]}
+];
+
+function renderBloom(){
+  document.getElementById('bloom-list').innerHTML = BLOOM.map((b,idx)=>`
+    <div class="bloom-level">
+      <div class="bloom-head" onclick="toggleBloom(${idx})">
+        <div class="lvl" style="background:${b.color}">${idx+1}</div>
+        <span>${b.emoji} ${b.level}</span>
+      </div>
+      <div class="bloom-body" id="bloom-body-${idx}">
+        ${b.tasks.map((t,i)=>`
+          <div class="task-item">
+            <div class="q"><span class="q-num">${i+1}.</span> ${t.q}</div>
+            <button class="reveal-btn" onclick="revealAns(this)">Показать ответ</button>
+            <div class="answer">${t.a}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function toggleBloom(idx){ playClick(); document.getElementById('bloom-body-'+idx).classList.toggle('open'); }
+function revealAns(btn){ playClick(); const ans = btn.nextElementSibling; ans.classList.toggle('show'); btn.textContent = ans.classList.contains('show') ? 'Скрыть' : 'Показать ответ'; }
+
+/* ============ СТАРТ ============ */
+renderTheory();
+renderBloom();
+updateLevelRecords();
+</script>
+</body>
+</html>
